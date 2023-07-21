@@ -36,6 +36,9 @@
     <!-- Summary for the remembered network but no internet connection was detected. [CHAR LIMIT=NONE] -->
     <string name="wifi_no_internet">No internet access</string>
 
+     <!-- Summary for Connected wifi network with a low quality connection [CHAR LIMIT=NONE] -->
+    <string name="wifi_connected_low_quality">Low quality</string>
+
     <!-- Status for networks disabled from authentication failure (wrong password
          or certificate). [CHAR LIMIT=NONE] -->
     <string name="wifi_disabled_password_failure">Authentication problem</string>
