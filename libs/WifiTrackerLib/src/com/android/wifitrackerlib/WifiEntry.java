@@ -289,6 +289,14 @@ public abstract class WifiEntry implements Comparable<WifiEntry> {
         return mLevel;
     };
 
+    /**
+     * Returns whether the level icon for this network should show an X or not.
+     */
+    public boolean shouldShowXLevelIcon() {
+        return getConnectedState() != CONNECTED_STATE_DISCONNECTED
+                && (!mIsValidated || !mIsDefaultNetwork) && !canSignIn();
+    }
+
     /** Returns the speed value of the network defined by the SPEED constants */
     @Speed
     public int getSpeed() {
