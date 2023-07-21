@@ -223,6 +223,10 @@ public abstract class WifiEntry implements Comparable<WifiEntry> {
     protected boolean mCalledConnect = false;
     protected boolean mCalledDisconnect = false;
 
+    private boolean mIsValidated;
+    private boolean mIsDefaultNetwork;
+    protected boolean mIsLowQuality;
+
     WifiEntry(@NonNull Handler callbackHandler, @NonNull WifiManager wifiManager,
             @NonNull WifiNetworkScoreCache scoreCache,
             boolean forSavedNetworksPage) throws IllegalArgumentException {
