@@ -115,6 +115,7 @@ import android.telephony.PhoneStateListener;
 import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
+import android.util.EventLog;
 import android.util.Log;
 import android.util.MutableBoolean;
 
@@ -1084,11 +1085,15 @@ public class WifiServiceImpl extends BaseWifiService {
 
         SoftApConfiguration softApConfig = apConfig.getSoftApConfiguration();
 
-        if (softApConfig == null && TextUtils.isEmpty(mCountryCode.getCountryCode())) {
+        if (softApConfig == null && TextUtils.isEmpty(mCountryCode.getCountryCode())
+                && (mWifiApConfigStore.getApConfiguration().getBand() & SoftApConfiguration.BAND_2GHZ) != 1) {
             Log.d(TAG, "Starting softap without country code. Fallback to 2G band!");
             softApConfig = new SoftApConfiguration.Builder(mWifiApConfigStore.getApConfiguration())
                 .setBand(SoftApConfiguration.BAND_2GHZ).build();
-            mWifiApConfigStore.setApConfiguration(softApConfig);
+
+            // Create a tmp config to make compiler happy about lamda using final variable.
+            final SoftApConfiguration tmpSoftApConfig = new SoftApConfiguration.Builder(softApConfig).build();
+            mWifiThreadRunner.post(() -> mWifiApConfigStore.setApConfiguration(tmpSoftApConfig));
         }
 
         setDualSapMode(softApConfig);
@@ -3684,7 +3689,14 @@ public class WifiServiceImpl extends BaseWifiService {
         List<WifiConfiguration> networks = mWifiThreadRunner.call(
                 () -> mWifiConfigManager.getSavedNetworks(Process.WIFI_UID),
                 Collections.emptyList());
+        EventLog.writeEvent(0x534e4554, "231985227", -1,
+                "Remove certs for factory reset");
         for (WifiConfiguration network : networks) {
+            if (network.isEnterprise()) {
+                mWifiThreadRunner.run(() ->
+                        mWifiInjector.getWifiKeyStore()
+                                .removeKeys(network.enterpriseConfig, true));
+            }
             removeNetwork(network.networkId, packageName);
         }
         // Delete all Passpoint configurations
@@ -3695,6 +3707,9 @@ public class WifiServiceImpl extends BaseWifiService {
             removePasspointConfigurationInternal(null, config.getUniqueId());
         }
         mWifiThreadRunner.post(() -> {
+            EventLog.writeEvent(0x534e4554, "241927115", -1,
+                    "Reset SoftApConfiguration to default configuration");
+            mWifiApConfigStore.setApConfiguration(null);
             mPasspointManager.clearAnqpRequestsAndFlushCache();
             mWifiConfigManager.clearUserTemporarilyDisabledList();
             mWifiConfigManager.removeAllEphemeralOrPasspointConfiguredNetworks();

@@ -98,6 +98,7 @@ public class SupplicantStaNetworkHal {
     private ISupplicantStaNetworkCallback mISupplicantStaNetworkCallback;
 
     private boolean mVerboseLoggingEnabled = false;
+    private int mHalNetworksSize = 0;
     // Network variables read from wpa_supplicant.
     private int mNetworkId;
     private ArrayList<Byte> mSsid;
@@ -291,9 +292,8 @@ public class SupplicantStaNetworkHal {
             if (config == null) return false;
             /** SSID */
             if (config.SSID != null) {
-                String ssid = WifiGbk.getRealSsid(config); // wifigbk++
-                if (!setSsid(NativeUtil.decodeSsid(ssid))) {
-                    Log.e(TAG, "failed to set SSID: " + ssid);
+                if (!setSsid(NativeUtil.decodeSsid(config.SSID))) {
+                    Log.e(TAG, "failed to set SSID: " + config.SSID);
                     return false;
                 }
             }
@@ -1375,6 +1375,16 @@ public class SupplicantStaNetworkHal {
     /** get network current network */
     public int getNetworkId() {
            return mNetworkId;
+    }
+
+    /** set number of network profiles added to supplicant */
+    public void setHalNetworksSize(int size) {
+        mHalNetworksSize = size;
+    }
+
+    /** get number of network profiles added to supplicant */
+    public int getHalNetworksSize() {
+        return mHalNetworksSize;
     }
 
     /** set local vendor sta network, if it not null */
